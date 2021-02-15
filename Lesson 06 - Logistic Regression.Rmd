@@ -3,6 +3,13 @@ title: "Introduction to Classification"
 author: "David Svancer"
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, 
+                      message = FALSE, 
+                      warning = FALSE,
+                      comment = "")
+```
+
 In this tutorial, we will learn about classification and logistic regression with `tidymodels`. We will be using the `heart_disease` and `employee_data` data sets to demonstrate concepts in this tutorial.
 
 The `heart_disease` data contains demographics and outcomes of various medical tests for patients in a heart disease study. The variable of interest in this data is `heart_disease` and it indicates whether a patient was diagnosed with heart disease (Yes or No).
@@ -222,30 +229,27 @@ test_results
 
 ### Exploring Performance Metrics
 
-The `yardstick` package from `tidymodels` has a number of functions for calculating performance metrics on the results of a machine learning algorithm. 
+The `yardstick` package from `tidymodels` has a number of functions for calculating performance metrics on the results of a machine learning algorithm.
 
 Important function from this package include `conf_mat()`, `sens()`, `spec()`, `roc_curve()`, and `roc_auc()`
 
 All of these functions take a data frame with the structure of our `test_results` as the first argument. The input data frame must contain the three pieces of information mentioned at the beginning of this section:
 
-- The true response values from our test set
-- The predicted response category for each row of our test data
-- The estimated probabilities for each response category
-
+-   The true response values from our test set
+-   The predicted response category for each row of our test data
+-   The estimated probabilities for each response category
 
 #### Confusion Matrix
 
 The first result to explore is usually the confusion matrix. The `conf_mat()` function will produce one for us. It takes the following important arguments:
 
+-   `data` - the first argument is a data frame with model results (usually on the test set)
+-   `truth` - a factor column with the true response categories
+-   `estimate` - a factor column with the predicted response categories
 
-- `data` - the first argument is a data frame with model results (usually on the test set)
-- `truth` - a factor column with the true response categories
-- `estimate` - a factor column with the predicted response categories
-
-The results of this function are a confusion matrix with the predicted categories in the rows and true categories in the columns. 
+The results of this function are a confusion matrix with the predicted categories in the rows and true categories in the columns.
 
 By default, all `yardstick` functions map the first level of the response variable to the positive class. The `conf_mat()` function orders the output by displaying the positive class first in both the rows and columns.
-
 
 Form the results below, we have 58 correct predictions on our test data set. Since we have 75 rows in our test data, this gives us an accuracy of 77%.
 
@@ -258,17 +262,13 @@ conf_mat(test_results,
          estimate = .pred_class)
 ```
 
-
-
 #### Sensitivity
 
-The sensitivity is a performance metric that calculates the proportion of actual positive cases that the classification model predicted correctly. 
+The sensitivity is a performance metric that calculates the proportion of actual positive cases that the classification model predicted correctly.
 
 In our heart disease example, this is the proportion of patients who developed heart disease (`heart_disease` = Yes) that were predicted to develop heart disease.
 
-
 The `sens()` function from `yardstick` is used to calculate this metric. It takes the same arguments as `conf_mat()`.
-
 
 From the results below, we have a sensitivity of 0.76 on our test data results.
 
@@ -279,14 +279,11 @@ sens(test_results,
      estimate = .pred_class)
 ```
 
-
-
 #### Specificity
 
-The specificity is a performance metric that calculates the proportion of actual negative cases that the classification model predicted correctly. 
+The specificity is a performance metric that calculates the proportion of actual negative cases that the classification model predicted correctly.
 
 In our heart disease example, this is the proportion of patients who did not develop heart disease (`heart_disease` = No) that were predicted to not develop heart disease.
-
 
 The `spec()` function from `yardstick` is used to calculate this metric. It takes the same arguments as `conf_mat()`.
 
@@ -299,22 +296,17 @@ spec(test_results,
      estimate = .pred_class)
 ```
 
-
-
-
 #### ROC Curve
 
-The ROC curve is a way to visualize the performance of any classification model. The plot includes the [sensitivity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity){target="_blank"} on the y-axis and (1 - [specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity){target="_blank"} on the x-axis for all possible probability cut-off values. 
+The ROC curve is a way to visualize the performance of any classification model. The plot includes the [sensitivity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity){target="_blank"} on the y-axis and (1 - [specificity](https://en.wikipedia.org/wiki/Sensitivity_and_specificity){target="_blank"} on the x-axis for all possible probability cut-off values.
 
 The default probability cut-off value used by classification models is 0.5. But changing this can guard against either false positives or false negatives. The ROC curve plots all of this information in one plot.
 
-**What to look for**: the best ROC curve is as close as possible to the point (0, 1) that is at the top left corner of the plot. The closer the ROC curve is to that point throughout the entire range, the better the classification model. 
+**What to look for**: the best ROC curve is as close as possible to the point (0, 1) that is at the top left corner of the plot. The closer the ROC curve is to that point throughout the entire range, the better the classification model.
 
 The dashed line through the middle of the graph represents a model that is just guessing at random.
 
-
 The first step in creating an ROC curve is to pass our results data frame to the `roc_curve()` function. This function takes a data frame with model results, the `truth`, and `estimate` columns to produce a data frame with the specificity and sensitivity for all probability thresholds.
-
 
 ```{r}
 
@@ -322,7 +314,6 @@ roc_curve(test_results,
           truth = heart_disease,
           estimate = .pred_yes)
 ```
-
 
 To plot this data, we simply pass the results of `roc_curve()` to the `autoplot()` function.
 
@@ -333,7 +324,6 @@ roc_curve(test_results,
           estimate = .pred_yes) %>% 
   autoplot()
 ```
-
 
 #### Area Under the ROC Curve
 
@@ -354,14 +344,11 @@ roc_auc(test_results,
         .pred_yes)
 ```
 
-
 #### F1 Score
 
 The F1 score is a performance metric that equally balances our false positive and false negative mistakes. The range of an F1 score is from 0 (worst) to 1 (best).
 
-
 The `f_meas()` function from `yardstick` is used to calculate this metric. It takes the same arguments as `conf_mat()`.
-
 
 From the results below, we have an F1 score 0.75 on our test data results.
 
@@ -371,8 +358,6 @@ f_meas(test_results,
        truth = heart_disease, 
        estimate = .pred_class)
 ```
-
-
 
 #### Creating Custom Metric Sets
 
