@@ -3,12 +3,9 @@ title: "Introduction to Classification"
 author: "David Svancer"
 ---
 
-
 In this tutorial, we will learn about classification and logistic regression with `tidymodels`. We will be using the `heart_disease` and `employee_data` data sets to demonstrate concepts in this tutorial.
 
 The `heart_disease` data contains demographics and outcomes of various medical tests for patients in a heart disease study. The variable of interest in this data is `heart_disease` and it indicates whether a patient was diagnosed with heart disease (Yes or No).
-
-
 
 The code below will load the required packages and data sets for this tutorial.
 
@@ -35,39 +32,37 @@ heart_df <- readRDS(url('https://gmubusinessanalytics.netlify.app/data/heart_dis
 heart_df
 ```
 
-
-
 # Introduction to Logistic Regression
 
-In logistic regression, we are estimating the probability that our **Bernoulli** response variable is equal to the `Positive` class. 
+In logistic regression, we are estimating the probability that our **Bernoulli** response variable is equal to the `Positive` class.
 
-In classification, the event we are interested in predicting, such as `heart_disease = 'Yes'` in our heart disease example, is known as the `Postive` event. Whereas the remaining event, `heart_disease = 'No'`, is the `Negative` event. 
+In classification, the event we are interested in predicting, such as `heart_disease = 'Yes'` in our heart disease example, is known as the `Postive` event. Whereas the remaining event, `heart_disease = 'No'`, is the `Negative` event.
 
 In our course tutorials, we will follow the model fitting process that is expected to be followed on the course analytics project. When fitting a classification model, whether logistic regression or a different type of algorithm, we will take the following steps:
 
+-   Split the data into a training and test set
 
+-   Specify a feature engineering pipeline with the `recipes` package
 
-- Split the data into a training and test set
-- Specify a feature engineering pipeline with the `recipes` package
-- Specify a `parsnip` model object
-- Package your recipe and model into a workflow
-- Fit your workflow to the training data
-    - If your model has hyperparameters, perform hyperparameter tuning - this will be covered next week
-- Evaluate model performance on the test set by studying the confusion matrix, ROC curve, and other performance metrics
+-   Specify a `parsnip` model object
 
+-   Package your recipe and model into a workflow
+
+-   Fit your workflow to the training data
+
+    -   If your model has hyperparameters, perform hyperparameter tuning - this will be covered next week
+
+-   Evaluate model performance on the test set by studying the confusion matrix, ROC curve, and other performance metrics
 
 Let's demonstrate this process using logistic regression and the `heart_df` data.
 
-
-
 ## Data Splitting
 
-The first step in modeling is to split our data into a training and test set. In the classification setting, we must also make sure that the response variable in our data set is a factor. 
+The first step in modeling is to split our data into a training and test set. In the classification setting, we must also make sure that the response variable in our data set is a factor.
 
 By default, `tidymodels` maps the first level of a factor to the `Positive` class while calculating performance metrics. Therefore, before we split our data and proceed to modeling, we need to make sure that the event we are trying to predict is the first level of our response variable.
 
 For the `heart_df` data, the event we are interested in predicting is `heart_disease = 'Yes'`. We can use the `levels()` function to check the current ordering of the levels of the `heart_disease` variable.
-
 
 ```{r}
 
@@ -75,12 +70,9 @@ levels(heart_df$heart_disease)
 
 ```
 
-
-
-Since 'yes' is the first level, we don't need to take an further steps and can proceed to splitting our data. 
+Since 'yes' is the first level, we don't need to take an further steps and can proceed to splitting our data.
 
 In the code below, we use the `initial_split()` function from `rsample` to create our training and testing data using the `heart_df` data.
-
 
 ```{r}
 
@@ -96,15 +88,11 @@ heart_training <- heart_split %>% training()
 heart_test <- heart_split %>% testing()
 ```
 
-
-
 ## Feature Engineering
 
-The next step in the modeling process is to define our feature engineering steps. In the code below, we process our numeric predictors by removing skewness and normalizing, and create dummy variables from our `chest_pain` predictor. 
+The next step in the modeling process is to define our feature engineering steps. In the code below, we process our numeric predictors by removing skewness and normalizing, and create dummy variables from our `chest_pain` predictor.
 
 When creating a feature engineering pipeline, it's important to exclude `prep()` and `bake()` because these will be implemented automatically in our workflow that is created at a later stage
-
-
 
 ```{r}
 
@@ -114,10 +102,7 @@ heart_recipe <- recipe(heart_disease ~ ., data = heart_training) %>%
                 step_dummy(all_nominal(), -all_outcomes())
 ```
 
-
-
 However, it is always good practice to check that the feature engineering recipe is doing what we expect. The code below processes our training data with `prep()` and `bake()` so that we can have a look at the results.
-
 
 ```{r}
 
@@ -126,12 +111,9 @@ heart_recipe %>%
   bake(new_data = NULL)
 ```
 
-
-
 ## Model Specification
 
-Next, we define our logistic regression model object. In this case, we use the `logistic_reg()` function from `parsnip`. Our engine is `glm` and our mode is `classification.
-
+Next, we define our logistic regression model object. In this case, we use the `logistic_reg()` function from `parsnip`. Our engine is `glm` and our mode is \`classification.
 
 ```{r}
 
@@ -140,13 +122,9 @@ logistic_model <- logistic_reg() %>%
                   set_mode('classification')
 ```
 
-
-
 ## Create a Workflow
 
 Now we can combine our model object and recipe into a single workflow object using the `workflow()` function.
-
-
 
 ```{r}
 
@@ -155,13 +133,9 @@ heart_wf <- workflow() %>%
             add_recipe(heart_recipe)
 ```
 
-
-
 ## Fit the Model
 
 Next we fit our workflow to the training data. This is done by passing our workflow object to the `fit()` function
-
-
 
 ```{r}
 
@@ -169,15 +143,11 @@ heart_logistic_fit <- heart_wf %>%
                       fit(data = heart_training)
 ```
 
-
-
 ### Exploring our Trained Model
 
 Once we have trained our logistic regression model on our training data, we can optionally study variable importance with the `vip()` function.
 
-The first step is to extract the trained model from our workflow fit, `heart_logistic_fit`. This can be done by passing `heart_logistic_fit` to the `pull_workflow_fit()` function. 
-
-
+The first step is to extract the trained model from our workflow fit, `heart_logistic_fit`. This can be done by passing `heart_logistic_fit` to the `pull_workflow_fit()` function.
 
 ```{r}
 
@@ -185,20 +155,16 @@ heart_trained_model <- heart_logistic_fit %>%
                        pull_workflow_fit()
 ```
 
-
 ### Variable Importance
 
-Next we pass `heart_trained_model` to the `vip()` function. This will return a `ggplot` object with the variable importance scores from our model. The importance scores are based on the z-statistics associated with each predictor. 
+Next we pass `heart_trained_model` to the `vip()` function. This will return a `ggplot` object with the variable importance scores from our model. The importance scores are based on the z-statistics associated with each predictor.
 
 We see from the results below, that asymptomatic chest pain, maximum heart rate, and resting blood pressure, are the most important predictors of heart disease from our data set.
-
 
 ```{r}
 
 vip(heart_trained_model)
 ```
-
-
 
 ## Evaluate Performance
 
@@ -206,23 +172,17 @@ The next step in the modeling process is to assess the accuracy of our model on 
 
 Before we can do this, we create a results data frame with the following data:
 
-
-
-- The true response values from our test set
-- The predicted response category for each row of our test data
-- The estimated probabilities for each response category
-
-
+-   The true response values from our test set
+-   The predicted response category for each row of our test data
+-   The estimated probabilities for each response category
 
 All of this data can be put together using the `predict()` function.
-
 
 ### Predicted Categories
 
 To obtain the predicted category for each row in our test set, we pass the `heart_logistic_fit` object to the `predict` function and specify `new_data = heart_test`.
 
 We will get a data frame with a column named `.pred_class` which has the predicted category (yes/no) for each row of our test data set.
-
 
 ```{r}
 
@@ -232,14 +192,11 @@ predictions_categories <- predict(heart_logistic_fit,
 predictions_categories
 ```
 
-
-
 Next we need to obtain the estimated probabilities for each category of our response variable.
 
-This is done with the same code as above but with the additional argument, `type = 'prob')
+This is done with the same code as above but with the additional argument, \`type = 'prob')
 
 In this case we get a data frame with the following columns, `.pred_yes` and `.pred_no`. The `tidymodels` package will always use the following convention for naming these columns `.pred_level_of_factor_in_response_variable`
-
 
 ```{r}
 
@@ -250,16 +207,11 @@ predictions_probabilities <- predict(heart_logistic_fit,
 predictions_probabilities
 ```
 
-
-
-
 The final step is to combine the results from above with the true response variable values in our test data set.
-
 
 ```{r}
 
 # Combine
-
 test_results <- heart_test %>% select(heart_disease) %>% 
                 bind_cols(predictions_categories) %>% 
                 bind_cols(predictions_probabilities)
@@ -268,21 +220,17 @@ test_results
 
 ```
 
-
-
 ### Exploring Performance Metrics
 
 The `yardstick` package from `tidymodels` has a number of functions for calculating performance metrics on the results of a machine learning algorithm. 
 
-Important function from this package include `conf_mat()`, `f_meas()`, `roc_curve()`, `roc_auc()`
+Important function from this package include `conf_mat()`, `sens()`, `spec()`, `roc_curve()`, and `roc_auc()`
 
 All of these functions take a data frame with the structure of our `test_results` as the first argument. The input data frame must contain the three pieces of information mentioned at the beginning of this section:
-
 
 - The true response values from our test set
 - The predicted response category for each row of our test data
 - The estimated probabilities for each response category
-
 
 
 #### Confusion Matrix
@@ -293,7 +241,6 @@ The first result to explore is usually the confusion matrix. The `conf_mat()` fu
 - `data` - the first argument is a data frame with model results (usually on the test set)
 - `truth` - a factor column with the true response categories
 - `estimate` - a factor column with the predicted response categories
-
 
 The results of this function are a confusion matrix with the predicted categories in the rows and true categories in the columns. 
 
@@ -312,23 +259,47 @@ conf_mat(test_results,
 ```
 
 
-#### F1 Score
 
-The F1 score is a performance metric that equally balances our false positive and false negative mistakes. The range of an F1 score is from 0 (worst) to 1 (best).
+#### Sensitivity
+
+The sensitivity is a performance metric that calculates the proportion of actual positive cases that the classification model predicted correctly. 
+
+In our heart disease example, this is the proportion of patients who developed heart disease (`heart_disease` = Yes) that were predicted to develop heart disease.
 
 
-The `f_meas()` function from `yardstick` is used to calculate this metric. It takes the same arguments as `conf_mat()`.
+The `sens()` function from `yardstick` is used to calculate this metric. It takes the same arguments as `conf_mat()`.
 
 
-From the results below, we have an F1 score 0.75 on our test data results.
-
+From the results below, we have a sensitivity of 0.76 on our test data results.
 
 ```{r}
 
-f_meas(test_results,
-       truth = heart_disease, 
-       estimate = .pred_class)
+sens(test_results,
+     truth = heart_disease, 
+     estimate = .pred_class)
 ```
+
+
+
+#### Specificity
+
+The specificity is a performance metric that calculates the proportion of actual negative cases that the classification model predicted correctly. 
+
+In our heart disease example, this is the proportion of patients who did not develop heart disease (`heart_disease` = No) that were predicted to not develop heart disease.
+
+
+The `spec()` function from `yardstick` is used to calculate this metric. It takes the same arguments as `conf_mat()`.
+
+From the results below, we have a sensitivity of 0.78 on our test data results.
+
+```{r}
+
+spec(test_results,
+     truth = heart_disease, 
+     estimate = .pred_class)
+```
+
+
 
 
 #### ROC Curve
@@ -353,9 +324,7 @@ roc_curve(test_results,
 ```
 
 
-
 To plot this data, we simply pass the results of `roc_curve()` to the `autoplot()` function.
-
 
 ```{r}
 
@@ -378,7 +347,6 @@ This function takes the results data frame as the first argument, the `truth` co
 
 From our results below, our model gets a "B".
 
-
 ```{r}
 
 roc_auc(test_results,
@@ -387,15 +355,32 @@ roc_auc(test_results,
 ```
 
 
+#### F1 Score
+
+The F1 score is a performance metric that equally balances our false positive and false negative mistakes. The range of an F1 score is from 0 (worst) to 1 (best).
+
+
+The `f_meas()` function from `yardstick` is used to calculate this metric. It takes the same arguments as `conf_mat()`.
+
+
+From the results below, we have an F1 score 0.75 on our test data results.
+
+```{r}
+
+f_meas(test_results,
+       truth = heart_disease, 
+       estimate = .pred_class)
+```
+
+
 
 #### Creating Custom Metric Sets
 
 It is also possible to create a custom metric set using the `metric_set()` function. This function takes `yardstick` function names as arguments and returns a new function that we can use to calculate that set of metrics.
 
-In the code below we create a new function, `my_metrics()` that will calculate the accuracy, sensitivity, specificity,  F1, and ROC AUC from the results data frame.
+In the code below we create a new function, `my_metrics()` that will calculate the accuracy, sensitivity, specificity, F1, and ROC AUC from the results data frame.
 
 **Note**: Since `accuracy()`, `sens()`, `spec()`, and `f_meas()` require the `truth` and `estimate` columns while `roc_auc()` requires the `truth` column and a column of estimated probabilities for the positive class, all three must be provided to the custom function when it is called.
-
 
 ```{r}
 
@@ -407,7 +392,6 @@ my_metrics(test_results,
            .pred_yes)
 ```
 
-
 ## Automating the Process
 
 Just like with linear regression, we can automate the process of fitting a logistic regression model by using the `last_fit()` function. This will automatically give use the predictions and metrics on our test data set.
@@ -418,16 +402,12 @@ The `last_fit()` function takes a workflow object as the first argument and a da
 
 The `last_fit()` function takes an optional `metrics` argument where a custom metric function can be provided. In the example below, we use our `my_metrics()` function. If this is left out of the call to `last_fit()`, it will calculate accuracy and ROC AUC by default.
 
-
-
-```{r}
+```{r warning = FALSE, message = FALSE}
 
 last_fit_model <- heart_wf %>% 
                   last_fit(split = heart_split,
                            metrics = my_metrics)
 ```
-
-
 
 To obtain the metrics on the test set (accuracy and roc_auc by default) we use `collect_metrics()`.
 
@@ -436,8 +416,6 @@ To obtain the metrics on the test set (accuracy and roc_auc by default) we use `
 last_fit_model %>% 
   collect_metrics()
 ```
-
-
 
 We can also obtain a data frame with test set results by using the `collect_predictions()` function.
 
@@ -449,8 +427,6 @@ last_fit_results <- last_fit_model %>%
 last_fit_results
 ```
 
-
-
 We can use this data frame to make an ROC plot by using `roc_curve()` and `autoplot()`.
 
 ```{r}
@@ -460,13 +436,9 @@ last_fit_results %>%
   autoplot()
 ```
 
-
-
 # Predicting Employee Attrition
 
 Let's go through one more example of fitting a logistic regression. This time we will predict whether employees will leave a company or not using the `employee_data` data frame.
-
-
 
 ## Data Splitting
 
@@ -479,8 +451,6 @@ The code below shows that we need to recode the `left_company` column so that 'Y
 levels(employee_data$left_company)
 ```
 
-
-
 The code below reorders the levels of the `left_company` using the `factor()` function. We just add 'Yes' as the first level in the `levels` argument.
 
 ```{r}
@@ -492,9 +462,7 @@ employee_data <- employee_data %>%
 levels(employee_data$left_company)
 ```
 
-
-
-Now we can proceed to split our data with `initial_split()`. 
+Now we can proceed to split our data with `initial_split()`.
 
 ```{r}
 
@@ -508,15 +476,13 @@ employee_training <- employee_split %>% training()
 employee_test <- employee_split %>% testing()
 ```
 
-
 ## Feature Engineering
 
 Next we create our feature engineering pipeline. In this case, we will perform the same steps as our prior feature engineering:
 
-- Remove skewness from numeric predictors
-- Normalize all numeric predictors
-- Create dummy variables for all nominal predictors
-
+-   Remove skewness from numeric predictors
+-   Normalize all numeric predictors
+-   Create dummy variables for all nominal predictors
 
 ```{r}
 
@@ -525,8 +491,6 @@ employee_recipe <- recipe(left_company ~ ., data = employee_training) %>%
                    step_normalize(all_numeric(), -all_outcomes()) %>% 
                    step_dummy(all_nominal(), -all_outcomes())
 ```
-
-
 
 Let's check to see if the feature engineering steps have been carried out correctly.
 
@@ -537,13 +501,9 @@ employee_recipe %>%
   bake(new_data = NULL)
 ```
 
-
-
 ## Model Specification
 
 In this case, we will be using the same model object as before, `logistic_model`.
-
-
 
 ## Create a Workflow
 
@@ -552,7 +512,6 @@ employee_wf <- workflow() %>%
                add_model(logistic_model) %>% 
                add_recipe(employee_recipe)
 ```
-
 
 ## Train and Evaluate With `last_fit()`
 
@@ -565,8 +524,6 @@ last_fit_employee <- employee_wf %>%
                               metrics = my_metrics)
 ```
 
-
-
 To obtain the metrics on the test set we use `collect_metrics()`. Based on area under the ROC curve, our model has an "A+".
 
 ```{r}
@@ -574,8 +531,6 @@ To obtain the metrics on the test set we use `collect_metrics()`. Based on area 
 last_fit_employee %>% 
   collect_metrics()
 ```
-
-
 
 We can also obtain a data frame with test set results by using the `collect_predictions()` function. Notice that that our column with estimated probabilities for the positive class ('Yes' in our factor `left_company`) is now named `.pred_Yes`'.
 
@@ -587,9 +542,6 @@ last_fit_employee <- last_fit_employee %>%
 last_fit_employee
 ```
 
-
-
-
 We can use this data frame to make an ROC plot by using `roc_curve()` and `autoplot()`.
 
 ```{r}
@@ -598,5 +550,3 @@ last_fit_employee %>%
   roc_curve(truth = left_company, estimate = .pred_Yes) %>% 
   autoplot()
 ```
-
-
